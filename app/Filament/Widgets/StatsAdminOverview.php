@@ -15,37 +15,37 @@ class StatsAdminOverview extends BaseWidget
         // Calculate total distances covered by the nearest and farthest routes
         $totalDistanceForUser = $this->calculateTotalDistanceForUser($user);
 
-        // Calculate total miles saved
-        $totalMilesSaved = $totalDistanceForUser['farthest'] - $totalDistanceForUser['nearest'];
+        // Calculate total kilos saved
+        $totalKilosSaved = $totalDistanceForUser['farthest'] - $totalDistanceForUser['nearest'];
 
         return [
             Stat::make('Total Journey Attempts', $user->journeyAttempts->count())
                 ->icon('heroicon-m-map')
-                ->description('The total number of journey attempts you have entered into the system.'),
+                ->description('The total number of journey attempts entered into the system.'),
 
             Stat::make('Total Waypoints', $user->waypoints->count())
                 ->icon('heroicon-m-map-pin')
-                ->description('The total number of waypoints you have entered into the system.'),
+                ->description('The total number of waypoints entered into the system.'),
 
             Stat::make('Calculated Journey Attempts', $user->journeyAttempts->where('calculated', true)->count())
                 ->icon('heroicon-m-map')
                 ->color('success')
                 ->description('The number of journey attempts that have been successfully calculated.'),
 
-            Stat::make('Total Distance (Without Application)', $totalDistanceForUser['farthest'])
+            Stat::make('Total Distance (Without Our System)', $totalDistanceForUser['farthest'])
                 ->icon('heroicon-m-map')
                 ->color('danger')
-                ->description('The total distance you would have traveled without using our application. This reflects the distance you would have covered by following the farthest available route.'),
+                ->description('The total distance that would have been traveled without using our system. This reflects the distance covered by following the farthest available route.'),
 
-            Stat::make('Total Miles Saved', $totalMilesSaved)
+            Stat::make('Total Distance (With Our System)', $totalKilosSaved)
                 ->icon('heroicon-m-map')
                 ->color('success')
-                ->description('The total miles saved by using our application compared to traveling the farthest available route.'),
+                ->description('The total distance that would have been traveled with using our system. This reflects the distance covered by following the nearest available route.'),
 
             Stat::make('Total Distance Saved', $totalDistanceForUser['nearest'])
                 ->icon('heroicon-m-map')
                 ->color('success')
-                ->description('The total reduction in distance achieved by using our application. This indicates the overall distance saved by following the optimized routes provided by our application.'),
+                ->description('The overall reduction in distance achieved by using our system. This indicates the distance saved by following the optimized routes provided by our system.'),
 
         ];
     }
