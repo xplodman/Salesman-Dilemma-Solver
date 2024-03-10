@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\SocialController;
 use Illuminate\Support\Facades\Route;
-use Spatie\Permission\Models\Role;
 
 /*
 |--------------------------------------------------------------------------
