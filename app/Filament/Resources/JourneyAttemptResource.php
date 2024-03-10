@@ -18,6 +18,7 @@ use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\HtmlString;
 
 class JourneyAttemptResource extends Resource {
     protected static ?string $model = JourneyAttempt::class;
@@ -25,7 +26,6 @@ class JourneyAttemptResource extends Resource {
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     protected static ?int $navigationSort = 2;
-
 
     public static function form( Form $form ): Form {
         return $form
@@ -40,6 +40,31 @@ class JourneyAttemptResource extends Resource {
                       ->nullable()
                       ->visibleOn( 'edit' )
                       ->searchable(),
+                TextInput::make( 'nearest_route' )
+                         ->helperText( function ( JourneyAttempt $journeyAttempt ) {
+                             if ( empty( $journeyAttempt->nearest_route ) ) {
+                                 return '';
+                             }
+
+                             $googleMapsInfo = ( new JourneyRouteCalculatorService() )->generateGoogleMapsLink( $journeyAttempt->nearest_route );
+
+                             return new HtmlString( 'Route link: ' . $googleMapsInfo['link'] );
+                         } )
+                         ->visible( function ( JourneyAttempt $journeyAttempt ) {
+                             return $journeyAttempt->calculated;
+                         } )
+                         ->disabled()
+                         ->formatStateUsing( function ( JourneyAttempt $journeyAttempt ): string {
+                             if ( empty( $journeyAttempt->nearest_route ) ) {
+                                 return '';
+                             }
+
+                             $googleMapsInfo = ( new JourneyRouteCalculatorService() )->generateGoogleMapsLink( $journeyAttempt->nearest_route );
+
+                             return $googleMapsInfo['text'];
+                         } )
+                         ->columnSpanFull()
+                         ->required(),
             ] );
     }
 
@@ -55,7 +80,9 @@ class JourneyAttemptResource extends Resource {
                                          ->sortable(),
                 Tables\Columns\IconColumn::make( 'calculated' )->boolean(),
                 Tables\Columns\TextColumn::make( 'nearest_route' )
-                                         ->disabledClick()
+                                         ->disabledClick(function (JourneyAttempt $journeyAttempt){
+                                             return !empty( $journeyAttempt->nearest_route );
+                                         })
                                          ->wrap()
                                          ->label( 'Sorted Waypoints' )
                                          ->formatStateUsing( function ( string $state, JourneyAttempt $journeyAttempt ): string {
