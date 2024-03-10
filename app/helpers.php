@@ -1,6 +1,6 @@
 <?php
 
-if ( ! function_exists( 'array_get' ) ) {
+if (! function_exists('array_get')) {
     /**
      * Get a value from an array using "dot" notation.
      *
@@ -13,25 +13,26 @@ if ( ! function_exists( 'array_get' ) ) {
      *
      * @return mixed
      */
-    function array_get( $array, $key, $default = null ): mixed {
-        if ( ! ( is_array( $array ) || $array instanceof ArrayAccess ) ) {
+    function array_get($array, $key, $default = null): mixed
+    {
+        if (! ( is_array($array) || $array instanceof ArrayAccess )) {
             return $default instanceof Closure ? $default() : $default;
         }
 
-        if ( is_null( $key ) ) {
+        if (is_null($key)) {
             return $array;
         }
 
-        if ( array_key_exists( $key, $array ) ) {
+        if (array_key_exists($key, $array)) {
             return $array[ $key ];
         }
 
-        if ( strpos( $key, '.' ) === false ) {
+        if (strpos($key, '.') === false) {
             return $array[ $key ] ?? ( $default instanceof Closure ? $default() : $default );
         }
 
-        foreach ( explode( '.', $key ) as $segment ) {
-            if ( ( is_array( $array ) || $array instanceof ArrayAccess ) && ( array_key_exists( $segment, $array ) ) ) {
+        foreach (explode('.', $key) as $segment) {
+            if (( is_array($array) || $array instanceof ArrayAccess ) && ( array_key_exists($segment, $array) )) {
                 $array = $array[ $segment ];
             } else {
                 return $default instanceof Closure ? $default() : $default;
@@ -41,4 +42,3 @@ if ( ! function_exists( 'array_get' ) ) {
         return $array;
     }
 }
-

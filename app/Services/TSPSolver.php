@@ -2,40 +2,42 @@
 
 namespace App\Services;
 
-class TSPSolver {
-    public function solveNearestRoute( $distanceMatrix, $startWaypoint ) {
+class TSPSolver
+{
+    public function solveNearestRoute($distanceMatrix, $startWaypoint)
+    {
         // Initialize the path with the start waypoint
         $path = [ $startWaypoint->id ];
 
         // Get the number of waypoints
-        $numWaypoints = count( $distanceMatrix );
+        $numWaypoints = count($distanceMatrix);
 
         // Create an array to keep track of visited cities
-        $visited = array_fill_keys( array_keys( $distanceMatrix ), false );
+        $visited = array_fill_keys(array_keys($distanceMatrix), false);
 
         // Mark the start waypoint as visited
         $visited[ $startWaypoint->id ] = true;
 
         // Loop until all waypoints are visited
-        while ( count( $path ) < $numWaypoints ) {
+        while (count($path) < $numWaypoints) {
             // Initialize variables to track the nearest city and its distance
             $nearestCity     = null;
             $nearestDistance = PHP_INT_MAX;
 
             // Get the ID of the current city
-            $currentCity = end( $path );
+            $currentCity = end($path);
 
             // Iterate over the distances from the current city to other cities
-            foreach ( $distanceMatrix[ $currentCity ] as $cityId => $distance ) {
+            foreach ($distanceMatrix[ $currentCity ] as $cityId => $distance) {
                 // Check if the city is unvisited and closer than the current nearest city
-                if ( ! $visited[ $cityId ] && $distance < $nearestDistance ) {
+                if (! $visited[ $cityId ] && $distance < $nearestDistance) {
                     $nearestCity     = $cityId;
                     $nearestDistance = $distance;
                 }
             }
 
             // If a nearest unvisited city is found, add it to the path
-            if ( $nearestCity !== null ) {
+            if ($nearestCity !== null) {
                 $path[]                  = $nearestCity;
                 $visited[ $nearestCity ] = true;
             } else {
@@ -44,10 +46,10 @@ class TSPSolver {
                 $nearestDistance = PHP_INT_MAX;
 
                 // Iterate over the visited cities in the path
-                foreach ( $path as $visitedCityId ) {
-                    foreach ( $distanceMatrix[ $visitedCityId ] as $cityId => $distance ) {
+                foreach ($path as $visitedCityId) {
+                    foreach ($distanceMatrix[ $visitedCityId ] as $cityId => $distance) {
                         // Check if the city is unvisited and closer than the current nearest city
-                        if ( ! $visited[ $cityId ] && $distance < $nearestDistance ) {
+                        if (! $visited[ $cityId ] && $distance < $nearestDistance) {
                             $nearestCity     = $cityId;
                             $nearestDistance = $distance;
                         }
@@ -55,7 +57,7 @@ class TSPSolver {
                 }
 
                 // If a nearest unvisited city is found, add it to the path
-                if ( $nearestCity !== null ) {
+                if ($nearestCity !== null) {
                     $path[]                  = $nearestCity;
                     $visited[ $nearestCity ] = true;
                 } else {
@@ -133,6 +135,4 @@ class TSPSolver {
 
         return $path;
     }
-
-
 }

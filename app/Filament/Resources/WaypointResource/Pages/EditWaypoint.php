@@ -17,7 +17,8 @@ class EditWaypoint extends EditRecord
         ];
     }
 
-    protected function mutateFormDataBeforeSave(array $data): array {
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
         $location = $data['location'];
 
         $data['latitude'] = $location['lat'];

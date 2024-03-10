@@ -5,6 +5,7 @@ namespace App\Providers\Filament;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\NavigationGroup;
 use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -19,24 +20,31 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Althinect\FilamentSpatieRolesPermissions\FilamentSpatieRolesPermissionsPlugin;
 
-class AdminPanelProvider extends PanelProvider {
-    public function panel( Panel $panel ): Panel {
+class AdminPanelProvider extends PanelProvider
+{
+    public function panel(Panel $panel): Panel
+    {
         return $panel
             ->default()
-            ->favicon( asset( 'images/favicon.png' ) )
-            ->id( 'admin' )
-            ->path( 'admin' )
+            ->favicon(asset('images/favicon.png'))
+            ->id('admin')
+            ->path('admin')
             ->login()
-            ->colors( [
+            ->colors([
                 'primary' => Color::Indigo,
-            ] )
-            ->discoverResources( in: app_path( 'Filament/Resources' ), for: 'App\\Filament\\Resources' )
-            ->discoverPages( in: app_path( 'Filament/Pages' ), for: 'App\\Filament\\Pages' )
-            ->pages( [
+            ])
+            ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
+            ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
+            ->pages([
                 Pages\Dashboard::class,
-            ] )
-            ->discoverWidgets( in: app_path( 'Filament/Widgets' ), for: 'App\\Filament\\Widgets' )
-            ->middleware( [
+            ])
+            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
+            ->navigationGroups([
+                NavigationGroup::make()
+                               ->label('Settings')
+                               ->collapsed(),
+            ])
+            ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
                 StartSession::class,
@@ -46,10 +54,10 @@ class AdminPanelProvider extends PanelProvider {
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
-            ] )
-            ->plugin( FilamentSpatieRolesPermissionsPlugin::make() )
-            ->authMiddleware( [
+            ])
+            ->plugin(FilamentSpatieRolesPermissionsPlugin::make())
+            ->authMiddleware([
                 Authenticate::class,
-            ] );
+            ]);
     }
 }

@@ -19,5 +19,4 @@ class CreateWaypoint extends CreateRecord
         $data['longitude'] = $location['lng'];
         return $data;
     }
-
 }

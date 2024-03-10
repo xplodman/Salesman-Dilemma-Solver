@@ -68,15 +68,18 @@ class User extends Authenticatable implements FilamentUser
         'profile_photo_url',
     ];
 
-    public function canAccessPanel( Panel $panel ): bool {
+    public function canAccessPanel(Panel $panel): bool
+    {
         return $this->hasRole('admin|moderator');
     }
 
-    public function waypoints() {
-        return $this->hasMany( Waypoint::class );
+    public function waypoints()
+    {
+        return $this->hasMany(Waypoint::class);
     }
 
-    public function journeyAttempts() {
-        return $this->hasMany( JourneyAttempt::class );
+    public function journeyAttempts()
+    {
+        return $this->hasMany(JourneyAttempt::class);
     }
 }

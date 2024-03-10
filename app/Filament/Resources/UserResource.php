@@ -31,65 +31,68 @@ class UserResource extends Resource
     public static function form(Form $form): Form
     {
         return $form
-            ->schema( [
+            ->schema([
                 Section::make()
                        ->description()
-                       ->schema( [
-                           TextInput::make( 'name' ),
-                           TextInput::make( 'email' )->email(),
+                       ->schema([
+                           TextInput::make('name'),
+                           TextInput::make('email')->email(),
                            TextInput::make('password')
                                     ->password()
                                     ->dehydrateStateUsing(fn ($state) => Hash::make($state))
                                     ->dehydrated(fn ($state) => filled($state))
                                     ->required(fn (string $context): bool => $context === 'create'),
                            Select::make('roles')->multiple()->relationship('roles', 'name'),
-                       ] ),
+                       ]),
 
-            ] );
+            ]);
     }
 
-    public static function canViewAny(): bool {
+    public static function canViewAny(): bool
+    {
         return auth()->user()->hasRole('admin');
     }
 
-    public static function table( Table $table ): Table {
+    public static function table(Table $table): Table
+    {
         return $table
-            ->columns( [
-                TextColumn::make( 'name' ),
-                TextColumn::make( 'email' ),
-                TextColumn::make( 'created_at' )->dateTime(),
-            ] )
-            ->filters( [
-                Filter::make( 'email_verified_at' )->label( 'Email verified' )->query( function ( Builder $query ): Builder {
-                    return $query->whereNotNull( 'email_verified_at' );
-                } ),
-                Filter::make( 'created_at' )
-                      ->form( [
-                          DatePicker::make( 'created_from' ),
-                          DatePicker::make( 'created_until' ),
-                      ] )
-                      ->query( function ( Builder $query, array $data ): Builder {
+            ->columns([
+                TextColumn::make('name'),
+                TextColumn::make('email'),
+                TextColumn::make('created_at')->dateTime(),
+                TextColumn::make('roles.name')->listWithLineBreaks(),
+            ])
+            ->filters([
+                Filter::make('email_verified_at')->label('Email verified')->query(function (Builder $query): Builder {
+                    return $query->whereNotNull('email_verified_at');
+                }),
+                Filter::make('created_at')
+                      ->form([
+                          DatePicker::make('created_from'),
+                          DatePicker::make('created_until'),
+                      ])
+                      ->query(function (Builder $query, array $data): Builder {
                           return $query
                               ->when(
                                   $data['created_from'],
-                                  fn( Builder $query, $date ): Builder => $query->whereDate( 'created_at', '>=', $date ),
+                                  fn(Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
                               )
                               ->when(
                                   $data['created_until'],
-                                  fn( Builder $query, $date ): Builder => $query->whereDate( 'created_at', '<=', $date ),
+                                  fn(Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
                               );
-                      } ),
-                TrashedFilter::make( 'trashed' ),
-            ] )
-            ->actions( [
+                      }),
+                TrashedFilter::make('trashed'),
+            ])
+            ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
-            ] )
-            ->bulkActions( [
-                Tables\Actions\BulkActionGroup::make( [
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
-                ] ),
-            ] );
+                ]),
+            ]);
     }
 
     public static function getRelations(): array
