@@ -15,8 +15,11 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->string('name');
-            $table->json('nearest_route')->nullable();
-            $table->json('farthest_route')->nullable();
+            $table->json('shortest_path')->nullable();
+            $table->decimal('shortest_path_distance')->nullable();
+            $table->json('longest_path')->nullable();
+            $table->decimal('longest_path_distance')->nullable();
+            $table->boolean('calculated')->default(false);
             $table->softDeletes();
             $table->timestamps();
 

@@ -5,19 +5,39 @@ namespace App\Services;
 use App\Models\JourneyAttempt;
 use App\Models\Waypoint;
 use App\Models\WaypointDistance;
+use Illuminate\Database\Eloquent\Collection;
 
+/**
+ * Service to calculate optimal routes for journey attempts using the TSP solver and Bing Maps API.
+ */
 class JourneyRouteCalculatorService
 {
+    /**
+     * Service for interacting with Bing Maps API.
+     *
+     * @var BingMapsService
+     */
     protected $bingMapsService;
-    protected $tspSolver;
 
+    /**
+     * Initialize the service with dependencies.
+     */
     public function __construct()
     {
         $this->bingMapsService = new BingMapsService();
-        $this->tspSolver       = new TSPSolver();
     }
 
-    public function calculate(JourneyAttempt $journeyAttempt): void
+    /**
+     * Calculates and updates the journey attempt with the shortest and longest routes.
+     *
+     * This method orchestrates the calculation process by building a distance matrix,
+     * solving the TSP, and then updating the journey attempt with the results.
+     *
+     * @param   JourneyAttempt  $journeyAttempt  The journey attempt to calculate routes for.
+     *
+     * @return void
+     */
+    public function calculateJourneyRoutes(JourneyAttempt $journeyAttempt): void
     {
         // Retrieve the start waypoint associated with the journey attempt
         $startWaypoint = $journeyAttempt->startWaypoint;
@@ -25,36 +45,56 @@ class JourneyRouteCalculatorService
         // Retrieve waypoints associated with the journey attempt excluding the start waypoint
         $waypoints = $journeyAttempt->waypoints()->where('id', '!=', $startWaypoint->id)->get();
 
-        // Calculate the distance matrix
-        $distanceMatrix = $this->calculateDistanceMatrix($waypoints, $startWaypoint);
+        // Calculate the distance matrix for all waypoints including the start waypoint
+        $distanceMatrix = $this->buildDistanceMatrix($waypoints, $startWaypoint);
 
-        // Solve the TSP using the best path
-        $nearestRoute  = $this->tspSolver->solveNearestRoute($distanceMatrix, $startWaypoint);
-        $farthestRoute = $this->tspSolver->solveFarthestRoute($distanceMatrix, $startWaypoint);
+        // Solve the TSP to find the best path
+        $tspSolver = new TSPSolver($distanceMatrix, $startWaypoint->id);
+        $tspSolver->solve();
 
-        // Update the journey attempt with the calculated route
-        $journeyAttempt->update([ 'calculated' => true, 'nearest_route' => $nearestRoute, 'farthest_route' => $farthestRoute ]);
+        // Retrieve the longest and shortest paths from the TSP solver
+        $longestPath  = $tspSolver->getLongestPath();
+        $shortestPath = $tspSolver->getShortestPath();
+
+        // Update the journey attempt with the calculated route details
+        $journeyAttempt->update([
+            'calculated'             => true,
+            'shortest_path'          => $shortestPath['path'],
+            'shortest_path_distance' => $shortestPath['distance'],
+            'longest_path'           => $longestPath['path'],
+            'longest_path_distance'  => $longestPath['distance'],
+        ]);
     }
 
-    protected function calculateDistanceMatrix($waypoints, Waypoint $startWaypoint): array
+    /**
+     * Builds a distance matrix for a set of waypoints, including the start waypoint,
+     * to facilitate solving the Traveling Salesman Problem (TSP).
+     *
+     * Each waypoint's distance to every other waypoint is calculated and stored in the matrix,
+     * which is then used by the TSP solver.
+     *
+     * @param   Collection  $waypoints      The collection of waypoints excluding the start.
+     * @param   Waypoint    $startWaypoint  The starting waypoint.
+     *
+     * @return array The distance matrix as a two-dimensional array.
+     */
+    protected function buildDistanceMatrix(Collection $waypoints, Waypoint $startWaypoint): array
     {
         $distanceMatrix = [];
 
-        // Include the start waypoint in the list of waypoints
+        // Include the start waypoint in the list to calculate distances
         $waypoints = $waypoints->prepend($startWaypoint);
 
-        // Loop through all pairs of waypoints
-        foreach ($waypoints as $i => $origin) {
-            foreach ($waypoints as $j => $destination) {
-                // Calculate distance from origin to destination
-                $distance = $this->getDistance($origin, $destination);
+        // Calculate distances between each pair of waypoints
+        foreach ($waypoints as $origin) {
+            foreach ($waypoints as $destination) {
+                $distance = $this->fetchOrRetrieveDistance($origin, $destination);
 
-                // Store the distance in the database if it's not already stored
+                // Populate the distance matrix, avoiding redundancy
                 if (! isset($distanceMatrix[ $origin->id ][ $destination->id ])) {
-                    $this->storeDistance($origin->id, $destination->id, $distance);
+                    $this->saveWaypointDistance($origin->id, $destination->id, $distance);
                 }
 
-                // Populate the distance matrix symmetrically
                 $distanceMatrix[ $origin->id ][ $destination->id ] = $distance;
             }
         }
@@ -62,7 +102,19 @@ class JourneyRouteCalculatorService
         return $distanceMatrix;
     }
 
-    protected function storeDistance($originId, $destinationId, $distance): void
+    /**
+     * Saves the distance between two waypoints in the database.
+     *
+     * If the distance does not already exist in the database, it creates a new record
+     * in the WaypointDistance model to store the distance.
+     *
+     * @param   int               $originId       The ID of the origin waypoint.
+     * @param   int               $destinationId  The ID of the destination waypoint.
+     * @param   float|int|string  $distance       The distance between the waypoints.
+     *
+     * @return void
+     */
+    protected function saveWaypointDistance($originId, $destinationId, $distance): void
     {
         WaypointDistance::create([
             'origin_id'      => $originId,
@@ -71,34 +123,51 @@ class JourneyRouteCalculatorService
         ]);
     }
 
-    public function getDistance(Waypoint $origin, Waypoint $destination): float|int|string
+    /**
+     * Attempts to fetch the distance between two waypoints from the database,
+     * falling back to an API request if not found.
+     *
+     * This method optimizes distance retrieval by first checking if the distance
+     * is already stored in the database, thereby reducing unnecessary API calls.
+     *
+     * @param   Waypoint  $origin       The origin waypoint.
+     * @param   Waypoint  $destination  The destination waypoint.
+     *
+     * @return float|int|string The distance between the waypoints, or -1 on error.
+     */
+    public function fetchOrRetrieveDistance(Waypoint $origin, Waypoint $destination): float|int|string
     {
         if ($origin === $destination) {
             return 0;
         }
 
         try {
-            // Check if the distance is already stored in the database
-            $distance = $this->getStoredDistance($origin->id, $destination->id);
-
+            $distance = $this->retrieveDistanceFromStorage($origin->id, $destination->id);
             if ($distance !== null) {
                 return $distance;
             }
 
-            // If the distance is not stored, fetch it from the API
-            $distance = $this->fetchDistanceFromAPI($origin, $destination);
-
-            // Store the fetched distance in the database
-            $this->storeDistance($origin->id, $destination->id, $distance);
+            $distance = $this->retrieveDistanceViaAPI($origin, $destination);
+            $this->saveWaypointDistance($origin->id, $destination->id, $distance);
 
             return $distance;
         } catch (\Exception $e) {
-            // Handle any exceptions that occur during distance retrieval
-            return - 1;
+            return - 1; // Indicate an error with -1
         }
     }
 
-    protected function getStoredDistance($originId, $destinationId): ?float
+    /**
+     * Retrieves a stored distance between two waypoints from the database, if available.
+     *
+     * This method queries the WaypointDistance model for a distance record between
+     * the provided origin and destination waypoint IDs.
+     *
+     * @param   int  $originId       The ID of the origin waypoint.
+     * @param   int  $destinationId  The ID of the destination waypoint.
+     *
+     * @return float|null The stored distance if found, or null otherwise.
+     */
+    protected function retrieveDistanceFromStorage($originId, $destinationId): ?float
     {
         $distanceRecord = WaypointDistance::where('origin_id', $originId)
                                           ->where('destination_id', $destinationId)
@@ -107,41 +176,55 @@ class JourneyRouteCalculatorService
         return $distanceRecord ? $distanceRecord->distance : null;
     }
 
-    protected function fetchDistanceFromAPI(Waypoint $origin, Waypoint $destination): float|int|string
+    /**
+     * Fetches the distance between two waypoints using the Bing Maps API.
+     *
+     * This method is called when a distance is not found in the database and needs
+     * to be retrieved from an external source. The retrieved distance is also stored
+     * in the database for future reference.
+     *
+     * @param   Waypoint  $origin       The origin waypoint.
+     * @param   Waypoint  $destination  The destination waypoint.
+     *
+     * @return float|int|string The distance between the waypoints.
+     */
+    protected function retrieveDistanceViaAPI(Waypoint $origin, Waypoint $destination): float|int|string
     {
-        // Use Bing Maps API to fetch distance
         return $this->bingMapsService->getDistance(
             [ $origin->latitude, $origin->longitude ],
             [ $destination->latitude, $destination->longitude ]
         );
     }
 
-    public function generateGoogleMapsLink(array $waypointIds): array
+    /**
+     * Creates a Google Maps navigation link for a sequence of waypoint IDs.
+     *
+     * This method constructs a URL for Google Maps that plots a route through
+     * the provided waypoints in the order they are given.
+     *
+     * @param   array  $waypointIds  An array of waypoint IDs to include in the navigation link.
+     *
+     * @return array An array containing the link as a string and the waypoint names.
+     */
+    public function createGoogleMapsNavigationLink(array $waypointIds): array
     {
         if (empty($waypointIds)) {
             return [ 'text' => '', 'link' => '' ];
         }
 
-        // Construct the Google Maps URL
         $baseURL   = "https://www.google.com/maps/dir/";
         $waypoints = Waypoint::whereIn('id', $waypointIds)
                              ->orderByRaw('FIELD(id, ' . implode(',', $waypointIds) . ')')
                              ->get();
 
-        // Build the Google Maps URL
         $googleMapsURL = $baseURL;
         foreach ($waypoints as $waypoint) {
-            $googleMapsURL .= $waypoint->latitude . ',' . $waypoint->longitude . '/';
+            $googleMapsURL .= "{$waypoint->latitude},{$waypoint->longitude}/";
         }
-
-        // Remove the trailing slash
         $googleMapsURL = rtrim($googleMapsURL, '/');
 
-        // Concatenate sorted waypoint names into a string
         $waypointNames = $waypoints->pluck('name')->implode(', ');
-
-        // Create the HTML link
-        $link = "<a style='--c-300:var(--primary-300);--c-400:var(--primary-400);--c-500:var(--primary-500);--c-600:var(--primary-600);' class='fi-link relative inline-flex items-center justify-center font-semibold outline-none transition duration-75 hover:underline focus-visible:underline fi-size-sm fi-link-size-sm gap-1 text-sm fi-color-custom text-custom-600 dark:text-custom-400 fi-ac-link-action' href='{$googleMapsURL}' target='_blank'>Google Map</a>";
+        $link          = "<a style='--c-300:var(--primary-300);--c-400:var(--primary-400);--c-500:var(--primary-500);--c-600:var(--primary-600);' class='fi-link relative inline-flex items-center justify-center font-semibold outline-none transition duration-75 hover:underline focus-visible:underline fi-size-sm fi-link-size-sm gap-1 text-sm fi-color-custom text-custom-600 dark:text-custom-400 fi-ac-link-action' href='{$googleMapsURL}' target='_blank'>Google Map</a>";
 
         return [ 'text' => $waypointNames, 'link' => $link ];
     }

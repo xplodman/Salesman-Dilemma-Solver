@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('journey_attempts', function (Blueprint $table) {
-            $table->unsignedBigInteger('start_waypoint_id');
+            $table->unsignedBigInteger('start_waypoint_id')->after('name')->nullable();
             $table->foreign('start_waypoint_id')->references('id')->on('waypoints')->onDelete('cascade');
         });
     }

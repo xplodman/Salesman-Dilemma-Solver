@@ -16,7 +16,7 @@ class EditJourneyAttempt extends EditRecord
     {
         return [
             Actions\DeleteAction::make(),
-            Actions\Action::make('calculateNearestRoute')
+            Actions\Action::make('calculateShortestPath')
                           ->label(function (JourneyAttempt $journeyAttempt) {
                             if ($journeyAttempt->calculated) {
                                 return 'Recalculate';
@@ -32,13 +32,22 @@ class EditJourneyAttempt extends EditRecord
                               return 'success';
                           })
                           ->icon('heroicon-s-arrow-path')
-                          ->action('calculateNearestRoute'),
+                          ->requiresConfirmation()
+                          ->action(function (JourneyAttempt $journeyAttempt) {
+                              $this->calculateShortestPath($journeyAttempt);
+
+                              // Redirect page to any URL you want
+                              redirect(static::getUrl([
+                                  'name'   => 'edit', // Assuming 'name' is the correct key for the page/route name, adjust as necessary
+                                  'record' => $journeyAttempt->id, // The actual parameters expected by the route
+                              ]));
+                          }),
         ];
     }
 
-    public function calculateNearestRoute(): void
+    public function calculateShortestPath(JourneyAttempt $journeyAttempt): void
     {
         $journeyRouteCalculator = new JourneyRouteCalculatorService();
-        $journeyRouteCalculator->calculate($this->record);
+        $journeyRouteCalculator->calculateJourneyRoutes($journeyAttempt);
     }
 }

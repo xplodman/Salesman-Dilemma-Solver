@@ -12,11 +12,11 @@ class StatsAdminOverview extends BaseWidget
     {
         $user = auth()->user();
 
-        // Calculate total distances covered by the nearest and farthest routes
+        // Calculate total distances covered by the shortest and longest routes
         $totalDistanceForUser = $this->calculateTotalDistanceForUser($user);
 
         // Calculate total kilos saved
-        $totalKilosSaved = $totalDistanceForUser['farthest'] - $totalDistanceForUser['nearest'];
+        $totalKilosSaved = $totalDistanceForUser['longest'] - $totalDistanceForUser['shortest'];
 
         return [
             Stat::make('Total Journey Attempts', $user->journeyAttempts->count())
@@ -32,17 +32,17 @@ class StatsAdminOverview extends BaseWidget
                 ->color('success')
                 ->description('The number of journey attempts that have been successfully calculated.'),
 
-            Stat::make('Total Distance (Without Our System)', $totalDistanceForUser['farthest'])
+            Stat::make('Total Distance (Without Our System)', $totalDistanceForUser['longest'])
                 ->icon('heroicon-m-map')
                 ->color('danger')
-                ->description('The total distance that would have been traveled without using our system. This reflects the distance covered by following the farthest available route.'),
+                ->description('The total distance that would have been traveled without using our system. This reflects the distance covered by following the longest available route.'),
 
-            Stat::make('Total Distance (With Our System)', $totalKilosSaved)
+            Stat::make('Total Distance (With Our System)', $totalDistanceForUser['shortest'])
                 ->icon('heroicon-m-map')
                 ->color('success')
-                ->description('The total distance that would have been traveled with using our system. This reflects the distance covered by following the nearest available route.'),
+                ->description('The total distance that would have been traveled with using our system. This reflects the distance covered by following the shortest available route.'),
 
-            Stat::make('Total Distance Saved', $totalDistanceForUser['nearest'])
+            Stat::make('Total Distance Saved', $totalKilosSaved)
                 ->icon('heroicon-m-map')
                 ->color('success')
                 ->description('The overall reduction in distance achieved by using our system. This indicates the distance saved by following the optimized routes provided by our system.'),
@@ -54,32 +54,13 @@ class StatsAdminOverview extends BaseWidget
     protected function calculateTotalDistanceForUser($user)
     {
         $totalDistance = [
-            'nearest'  => 0,
-            'farthest' => 0,
+            'shortest' => 0,
+            'longest'  => 0,
         ];
 
         foreach ($user->journeyAttempts as $journeyAttempt) {
-            $totalDistance['nearest']  += $journeyAttempt->nearest_route ? $this->calculateRouteDistance($journeyAttempt->nearest_route) : 0;
-            $totalDistance['farthest'] += $journeyAttempt->farthest_route ? $this->calculateRouteDistance($journeyAttempt->farthest_route) : 0;
-        }
-
-        return $totalDistance;
-    }
-
-    protected function calculateRouteDistance($route)
-    {
-        // Initialize total distance
-        $totalDistance = 0;
-
-        // Loop through each waypoint in the route
-        for ($i = 0; $i < count($route) - 1; $i++) {
-            // Retrieve distance between consecutive waypoints from the database
-            $distance = WaypointDistance::where('origin_id', $route[ $i ])
-                                        ->where('destination_id', $route[ $i + 1 ])
-                                        ->value('distance');
-
-            // Add distance to the total distance
-            $totalDistance += $distance;
+            $totalDistance['shortest'] += $journeyAttempt->shortest_path_distance ?: 0;
+            $totalDistance['longest']  += $journeyAttempt->longest_path_distance ?: 0;
         }
 
         return $totalDistance;

@@ -10,10 +10,10 @@ class JourneyAttempt extends Model
     use SoftDeletes;
 
     protected $casts = [
-        'nearest_route' => 'json',
-        'farthest_route' => 'json',
+        'shortest_path'  => 'json',
+        'longest_path' => 'json',
     ];
-    protected $fillable = [ 'name', 'nearest_route', 'farthest_route', 'user_id', 'start_waypoint_id', 'calculated' ];
+    protected $fillable = [ 'name', 'shortest_path', 'shortest_path_distance', 'longest_path', 'longest_path_distance', 'user_id', 'start_waypoint_id', 'calculated' ];
 
     public function user()
     {
