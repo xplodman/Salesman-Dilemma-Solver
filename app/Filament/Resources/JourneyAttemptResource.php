@@ -101,7 +101,7 @@ class JourneyAttemptResource extends Resource
 
                                              $googleMapsInfo = ( new JourneyRouteCalculatorService() )->createGoogleMapsNavigationLink($journeyAttempt->shortest_path);
 
-                                             return $googleMapsInfo['text'] . $googleMapsInfo['link'];
+                                             return $googleMapsInfo['text'].' - ' . $googleMapsInfo['link'];
                                          })
                                          ->html(),
                 Tables\Columns\TextColumn::make('deleted_at')
