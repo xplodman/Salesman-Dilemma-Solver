@@ -38,7 +38,7 @@ class JourneyAttemptResource extends Resource
                 Select::make('start_waypoint_id')
                       ->label('Start Waypoint')
                       ->options(function (JourneyAttempt $journeyAttempt) {
-                          return Waypoint::where('journey_attempt_id', $journeyAttempt->id)->pluck('name', 'id');
+                          return Waypoint::where('user_id', auth()->user()->id)->where('journey_attempt_id', $journeyAttempt->id)->pluck('name', 'id');
                       })
                       ->default('start_waypoint_id')
                       ->nullable()

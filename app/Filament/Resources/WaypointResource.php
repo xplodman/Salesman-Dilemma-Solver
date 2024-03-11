@@ -35,7 +35,7 @@ class WaypointResource extends Resource
                          ->maxLength(255),
                 Select::make('journey_attempt_id')
                       ->label('Journey Attempt')
-                      ->options(JourneyAttempt::all()->pluck('name', 'id'))
+                      ->options(JourneyAttempt::where('user_id', auth()->user()->id)->pluck('name', 'id'))
                       ->required()
                       ->searchable(),
                 Map::make('location')
