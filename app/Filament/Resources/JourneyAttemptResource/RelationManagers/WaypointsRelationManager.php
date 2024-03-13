@@ -33,7 +33,7 @@ class WaypointsRelationManager extends RelationManager
                 Map::make('location')
                    ->label('Location')
                    ->columnSpanFull()
-                   ->afterStateUpdated(function (Forms\Get $get, Forms\Set $set, ?string $old, ?array $state): void {
+                   ->afterStateUpdated(function (Forms\Get $get, Forms\Set $set, $old, ?array $state): void {
                        $set('latitude', $state['lat']);
                        $set('longitude', $state['lng']);
                    })

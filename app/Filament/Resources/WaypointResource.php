@@ -22,7 +22,7 @@ class WaypointResource extends Resource
 {
     protected static ?string $model = Waypoint::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-m-map-pin';
 
     protected static ?int $navigationSort = 3;
 
@@ -41,7 +41,7 @@ class WaypointResource extends Resource
                 Map::make('location')
                    ->label('Location')
                    ->columnSpanFull()
-                   ->afterStateUpdated(function (Forms\Get $get, Forms\Set $set, ?string $old, ?array $state): void {
+                   ->afterStateUpdated(function (Forms\Get $get, Forms\Set $set, $old, ?array $state): void {
                        $set('latitude', $state['lat']);
                        $set('longitude', $state['lng']);
                    })

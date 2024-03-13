@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Resources\JourneyAttemptResource\Api\Transformers\JourneyAttemptTransformer;
 use App\Filament\Resources\JourneyAttemptResource\Pages;
 use App\Filament\Resources\JourneyAttemptResource\RelationManagers;
 use App\Models\JourneyAttempt;
@@ -24,7 +25,7 @@ class JourneyAttemptResource extends Resource
 {
     protected static ?string $model = JourneyAttempt::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-m-map';
 
     protected static ?int $navigationSort = 2;
 
