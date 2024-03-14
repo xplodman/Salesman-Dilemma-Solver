@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Filament\Resources\JourneyAttemptResource\Api\Handlers;
 
 use Illuminate\Http\Request;
@@ -6,7 +7,8 @@ use Illuminate\Support\Facades\Validator;
 use Rupadana\ApiService\Http\Handlers;
 use App\Filament\Resources\JourneyAttemptResource;
 
-class CreateHandler extends Handlers {
+class CreateHandler extends Handlers
+{
     public static string | null $uri = '/';
     public static string | null $resource = JourneyAttemptResource::class;
 
@@ -15,7 +17,8 @@ class CreateHandler extends Handlers {
         return Handlers::POST;
     }
 
-    public static function getModel() {
+    public static function getModel()
+    {
         return static::$resource::getModel();
     }
 
@@ -28,7 +31,7 @@ class CreateHandler extends Handlers {
         if ($validator->fails()) {
             $errors = $validator->errors()->toJson();
 
-            return static::sendNotFoundResponse( $errors );
+            return static::sendNotFoundResponse($errors);
         }
 
         $model = new (static::getModel());

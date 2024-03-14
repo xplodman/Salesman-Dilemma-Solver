@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Filament\Resources\WaypointResource\Api\Handlers;
 
 use Illuminate\Http\Request;
@@ -6,7 +7,8 @@ use Illuminate\Support\Facades\Validator;
 use Rupadana\ApiService\Http\Handlers;
 use App\Filament\Resources\WaypointResource;
 
-class DeleteHandler extends Handlers {
+class DeleteHandler extends Handlers
+{
     public static string | null $uri = '/{id}';
     public static string | null $resource = WaypointResource::class;
 
@@ -15,7 +17,8 @@ class DeleteHandler extends Handlers {
         return Handlers::DELETE;
     }
 
-    public static function getModel() {
+    public static function getModel()
+    {
         return static::$resource::getModel();
     }
 
@@ -31,12 +34,14 @@ class DeleteHandler extends Handlers {
         if ($validator->fails()) {
             $errors = $validator->errors()->toJson();
 
-            return static::sendNotFoundResponse( $errors );
+            return static::sendNotFoundResponse($errors);
         }
 
-        $model = static::getModel()::where( 'user_id', $currentUserId )->find($id);
+        $model = static::getModel()::where('user_id', $currentUserId)->find($id);
 
-        if (!$model) return static::sendNotFoundResponse();
+        if (!$model) {
+            return static::sendNotFoundResponse();
+        }
 
         $model->delete();
 

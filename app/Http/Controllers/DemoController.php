@@ -6,52 +6,55 @@ use App\Models\Waypoint;
 use App\Models\WaypointDistance;
 use App\Services\JourneyRouteCalculatorService;
 
-class DemoController extends Controller {
-    public function createDemo() {
+class DemoController extends Controller
+{
+    public function createDemo()
+    {
         // Check if the user already has the demo journey
         $user        = auth()->user();
-        $demoJourney = $user->journeyAttempts()->where( 'name', 'Demo USA Cities Journey' )->first();
+        $demoJourney = $user->journeyAttempts()->where('name', 'Demo USA Cities Journey')->first();
 
-        if ( ! $demoJourney ) {
+        if (! $demoJourney) {
             // Create the demo journey
-            $journey = $user->journeyAttempts()->create( [
+            $journey = $user->journeyAttempts()->create([
                 'name' => 'Demo USA Cities Journey',
-            ] );
+            ]);
 
             // Seed the USA cities
-            $this->seedCities( $journey );
+            $this->seedCities($journey);
 
             // Add a start waypoint
-            $startWaypoint = $journey->waypoints()->create( [
+            $startWaypoint = $journey->waypoints()->create([
                 'name'      => 'New York',
                 'latitude'  => 40.6943,
                 'longitude' => - 73.9249,
                 'user_id'   => auth()->user()->id,
-            ] );
+            ]);
 
             // Update the demo journey with the start waypoint
-            $journey->update( [ 'start_waypoint_id' => $startWaypoint->id ] );
+            $journey->update([ 'start_waypoint_id' => $startWaypoint->id ]);
 
-            return response()->json( [ 'message' => 'USA cities seeded successfully' ] );
+            return response()->json([ 'message' => 'USA cities seeded successfully' ]);
         }
 
-        return response()->json( [ 'message' => 'Demo USA Cities Journey already exists' ] );
+        return response()->json([ 'message' => 'Demo USA Cities Journey already exists' ]);
     }
 
-    public function calculateDemo() {
+    public function calculateDemo()
+    {
         // Check if the user already has the demo journey
         $user        = auth()->user();
-        $demoJourney = $user->journeyAttempts()->where( 'name', 'Demo USA Cities Journey' )->first();
+        $demoJourney = $user->journeyAttempts()->where('name', 'Demo USA Cities Journey')->first();
 
-        if ( ! $demoJourney ) {
-            return response()->json( [ 'message' => 'Demo journey not found' ], 404 );
+        if (! $demoJourney) {
+            return response()->json([ 'message' => 'Demo journey not found' ], 404);
         }
 
         // Calculate journey routes for the demo journey
         $journeyRouteCalculator = new JourneyRouteCalculatorService();
-        $journeyRouteCalculator->calculateJourneyRoutes( $demoJourney );
+        $journeyRouteCalculator->calculateJourneyRoutes($demoJourney);
 
-        return response()->json( [ 'message' => 'Demo journey routes calculated successfully' ] );
+        return response()->json([ 'message' => 'Demo journey routes calculated successfully' ]);
     }
 
     public function removeDemo()
@@ -76,7 +79,8 @@ class DemoController extends Controller {
         return response()->json(['message' => 'Demo does not exist']);
     }
 
-    private function seedCities( $journey ) {
+    private function seedCities($journey)
+    {
         $cities = [
             [ 'name' => 'Los Angeles', 'latitude' => 34.1141, 'longitude' => - 118.4068 ],
             [ 'name' => 'Chicago', 'latitude' => 41.8375, 'longitude' => - 87.6866 ],
@@ -86,15 +90,15 @@ class DemoController extends Controller {
         ];
 
         // Insert each city into the waypoints table
-        foreach ( $cities as $city ) {
-            $waypoint = new Waypoint( [
+        foreach ($cities as $city) {
+            $waypoint = new Waypoint([
                 'name'      => $city['name'],
                 'latitude'  => $city['latitude'],
                 'longitude' => $city['longitude'],
                 'user_id'   => auth()->user()->id,
-            ] );
+            ]);
 
-            $journey->waypoints()->save( $waypoint );
+            $journey->waypoints()->save($waypoint);
         }
     }
 }

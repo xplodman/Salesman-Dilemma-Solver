@@ -7,9 +7,10 @@ use Rupadana\ApiService\Http\Handlers;
 use Spatie\QueryBuilder\QueryBuilder;
 use App\Filament\Resources\JourneyAttemptResource;
 
-class PaginationHandler extends Handlers {
-	public static string|null $uri = '/';
-	public static string|null $resource = JourneyAttemptResource::class;
+class PaginationHandler extends Handlers
+{
+    public static string|null $uri = '/';
+    public static string|null $resource = JourneyAttemptResource::class;
 
     // Which fields can be selected from the database through the query string
     public static array $allowedFields = [
@@ -28,17 +29,18 @@ class PaginationHandler extends Handlers {
         'calculated'
     ];
 
-	public function handler() {
-		$model = static::getEloquentQuery();
+    public function handler()
+    {
+        $model = static::getEloquentQuery();
 
-		$query = QueryBuilder::for( $model )
-		                     ->allowedFields( self::$allowedFields ?? [] )
-		                     ->allowedSorts( self::$allowedSorts ?? [] )
-		                     ->allowedFilters( self::$allowedFilters ?? [] )
-		                     ->where( 'user_id', auth()->user()->id )
-		                     ->paginate( request()->query( 'per_page' ) )
-		                     ->appends( request()->query() );
+        $query = QueryBuilder::for($model)
+                             ->allowedFields(self::$allowedFields ?? [])
+                             ->allowedSorts(self::$allowedSorts ?? [])
+                             ->allowedFilters(self::$allowedFilters ?? [])
+                             ->where('user_id', auth()->user()->id)
+                             ->paginate(request()->query('per_page'))
+                             ->appends(request()->query());
 
-		return static::getApiTransformer()::collection( $query );
-	}
+        return static::getApiTransformer()::collection($query);
+    }
 }

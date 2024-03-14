@@ -1,11 +1,13 @@
 <?php
+
 namespace App\Filament\Resources\WaypointResource\Api\Handlers;
 
 use Illuminate\Http\Request;
 use Rupadana\ApiService\Http\Handlers;
 use App\Filament\Resources\WaypointResource;
 
-class UpdateHandler extends Handlers {
+class UpdateHandler extends Handlers
+{
     public static string | null $uri = '/{id}';
     public static string | null $resource = WaypointResource::class;
 
@@ -14,7 +16,8 @@ class UpdateHandler extends Handlers {
         return Handlers::PUT;
     }
 
-    public static function getModel() {
+    public static function getModel()
+    {
         return static::$resource::getModel();
     }
 
@@ -24,7 +27,9 @@ class UpdateHandler extends Handlers {
 
         $model = static::getModel()::find($id);
 
-        if (!$model) return static::sendNotFoundResponse();
+        if (!$model) {
+            return static::sendNotFoundResponse();
+        }
 
         $model->fill($request->all());
 

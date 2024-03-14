@@ -4,7 +4,8 @@ namespace App\Services;
 
 use App\Models\User;
 
-class JourneyStatsService {
+class JourneyStatsService
+{
     protected $stats = [
         'totalJourneyAttempts'           => [
             'label'       => 'Total Journey Attempts',
@@ -38,27 +39,29 @@ class JourneyStatsService {
         ],
     ];
 
-    public function getStats( User $user ): array {
+    public function getStats(User $user): array
+    {
         $stats = [];
-        foreach ( $this->stats as $key => $stat ) {
+        foreach ($this->stats as $key => $stat) {
             $stats[ $key ] = [
                 'description' => $stat['description'],
                 'icon'        => $stat['icon'],
                 'label'       => $stat['label'],
-                'value'       => $this->calculateStatValue( $user, $key ),
+                'value'       => $this->calculateStatValue($user, $key),
             ];
         }
 
         return $stats;
     }
 
-    protected function calculateTotalDistanceForUser( User $user ): array {
+    protected function calculateTotalDistanceForUser(User $user): array
+    {
         $totalDistance = [
             'shortest' => 0,
             'longest'  => 0,
         ];
 
-        foreach ( $user->journeyAttempts as $journeyAttempt ) {
+        foreach ($user->journeyAttempts as $journeyAttempt) {
             $totalDistance['shortest'] += $journeyAttempt->shortest_path_distance ?: 0;
             $totalDistance['longest']  += $journeyAttempt->longest_path_distance ?: 0;
         }
@@ -66,17 +69,16 @@ class JourneyStatsService {
         return $totalDistance;
     }
 
-    protected function calculateStatValue( User $user, string $key ) {
-        return match ( $key ) {
+    protected function calculateStatValue(User $user, string $key)
+    {
+        return match ($key) {
             'totalJourneyAttempts' => $user->journeyAttempts->count(),
             'totalWaypoints' => $user->waypoints->count(),
-            'totalCalculatedJourneyAttempts' => $user->journeyAttempts->where( 'calculated', true )->count(),
-            'totalShortestDistance' => $this->calculateTotalDistanceForUser( $user )['shortest'],
-            'totalLongestDistance' => $this->calculateTotalDistanceForUser( $user )['longest'],
-            'totalDistanceSaved' => $this->calculateTotalDistanceForUser( $user )['longest'] - $this->calculateTotalDistanceForUser( $user )['shortest'],
+            'totalCalculatedJourneyAttempts' => $user->journeyAttempts->where('calculated', true)->count(),
+            'totalShortestDistance' => $this->calculateTotalDistanceForUser($user)['shortest'],
+            'totalLongestDistance' => $this->calculateTotalDistanceForUser($user)['longest'],
+            'totalDistanceSaved' => $this->calculateTotalDistanceForUser($user)['longest'] - $this->calculateTotalDistanceForUser($user)['shortest'],
             default => 0,
         };
-
     }
 }
-

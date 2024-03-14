@@ -1,11 +1,13 @@
 <?php
+
 namespace App\Filament\Resources\JourneyAttemptResource\Api\Handlers;
 
 use Illuminate\Http\Request;
 use Rupadana\ApiService\Http\Handlers;
 use App\Filament\Resources\JourneyAttemptResource;
 
-class UpdateHandler extends Handlers {
+class UpdateHandler extends Handlers
+{
     public static string | null $uri = '/{id}';
     public static string | null $resource = JourneyAttemptResource::class;
 
@@ -14,7 +16,8 @@ class UpdateHandler extends Handlers {
         return Handlers::PUT;
     }
 
-    public static function getModel() {
+    public static function getModel()
+    {
         return static::$resource::getModel();
     }
 
@@ -22,9 +25,11 @@ class UpdateHandler extends Handlers {
     {
         $id = $request->route('id');
 
-        $model = static::getModel()::where( 'user_id', auth()->user()->id )->find($id);
+        $model = static::getModel()::where('user_id', auth()->user()->id)->find($id);
 
-        if (!$model) return static::sendNotFoundResponse();
+        if (!$model) {
+            return static::sendNotFoundResponse();
+        }
 
         $model->fill($request->only(['name']));
 

@@ -20,11 +20,13 @@ class DetailHandler extends Handlers
         $model = static::getEloquentQuery();
 
         $query = QueryBuilder::for(
-            $model->where( 'user_id', auth()->user()->id )->where(static::getKeyName(), $id)
+            $model->where('user_id', auth()->user()->id)->where(static::getKeyName(), $id)
         )
             ->first();
 
-        if (!$query) return static::sendNotFoundResponse();
+        if (!$query) {
+            return static::sendNotFoundResponse();
+        }
 
         $transformer = static::getApiTransformer();
 

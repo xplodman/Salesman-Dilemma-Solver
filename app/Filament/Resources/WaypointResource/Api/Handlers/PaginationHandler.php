@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Filament\Resources\WaypointResource\Api\Handlers;
 
 use Illuminate\Http\Request;
@@ -6,7 +7,8 @@ use Rupadana\ApiService\Http\Handlers;
 use Spatie\QueryBuilder\QueryBuilder;
 use App\Filament\Resources\WaypointResource;
 
-class PaginationHandler extends Handlers {
+class PaginationHandler extends Handlers
+{
     public static string | null $uri = '/';
     public static string | null $resource = WaypointResource::class;
 
@@ -30,13 +32,13 @@ class PaginationHandler extends Handlers {
     {
         $model = static::getEloquentQuery();
 
-        $query = QueryBuilder::for( $model )
-                             ->allowedFields( self::$allowedFields ?? [] )
-                             ->allowedSorts( self::$allowedSorts ?? [] )
-                             ->allowedFilters( self::$allowedFilters ?? [] )
-                             ->where( 'user_id', auth()->user()->id )
-                             ->paginate( request()->query( 'per_page' ) )
-                             ->appends( request()->query() );
+        $query = QueryBuilder::for($model)
+                             ->allowedFields(self::$allowedFields ?? [])
+                             ->allowedSorts(self::$allowedSorts ?? [])
+                             ->allowedFilters(self::$allowedFilters ?? [])
+                             ->where('user_id', auth()->user()->id)
+                             ->paginate(request()->query('per_page'))
+                             ->appends(request()->query());
 
         return static::getApiTransformer()::collection($query);
     }
