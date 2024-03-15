@@ -16,4 +16,9 @@ class Waypoint extends Model
     {
         return $this->belongsTo(JourneyAttempt::class);
     }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }
