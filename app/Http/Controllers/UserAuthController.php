@@ -53,4 +53,28 @@ class UserAuthController extends Controller
             "message"=>"logged out"
         ]);
     }
+
+    public function getUser()
+    {
+        $user = auth()->user();
+        return response()->json([
+            'user' => $user
+        ]);
+    }
+
+    public function updateUser(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+        ]);
+
+        $user = auth()->user();
+        $user->name = $request->input('name');
+        $user->save();
+
+        return response()->json([
+            'message' => 'User updated successfully',
+            'user' => $user
+        ]);
+    }
 }
