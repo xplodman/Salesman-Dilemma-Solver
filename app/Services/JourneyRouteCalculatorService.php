@@ -197,35 +197,67 @@ class JourneyRouteCalculatorService
     }
 
     /**
-     * Creates a Google Maps navigation link for a sequence of waypoint IDs.
+     * Generates a Google Maps navigation link based on provided waypoint IDs.
      *
-     * This method constructs a URL for Google Maps that plots a route through
-     * the provided waypoints in the order they are given.
+     * This function constructs a Google Maps navigation link that includes the provided waypoints.
      *
-     * @param   array  $waypointIds  An array of waypoint IDs to include in the navigation link.
-     *
-     * @return array An array containing the link as a string and the waypoint names.
+     * @param array $waypointIds An array of waypoint IDs.
+     * @return array An array containing the names of waypoints and the constructed Google Maps URL.
      */
-    public function createGoogleMapsNavigationLink(array $waypointIds): array
+    public function generateGoogleMapsNavigationLink(array $waypointIds): array
     {
+        // Check if the array of waypoint IDs is empty
         if (empty($waypointIds)) {
+            // If empty, return an empty array for both text and link
             return [ 'text' => '', 'link' => '' ];
         }
 
-        $baseURL   = "https://www.google.com/maps/dir/";
+        // Retrieve waypoints based on the provided IDs
         $waypoints = Waypoint::whereIn('id', $waypointIds)
                              ->orderByRaw('FIELD(id, ' . implode(',', $waypointIds) . ')')
                              ->get();
 
-        $googleMapsURL = $baseURL;
-        foreach ($waypoints as $waypoint) {
-            $googleMapsURL .= "{$waypoint->latitude},{$waypoint->longitude}/";
-        }
-        $googleMapsURL = rtrim($googleMapsURL, '/');
+        // Construct the Google Maps URL with origin, destination, and waypoints
+        $googleMapsURL = $this->buildGoogleMapsURL($waypoints);
 
+        // Extract names of waypoints for display
         $waypointNames = $waypoints->pluck('name')->implode(', ');
-        $link          = "<a style='--c-300:var(--primary-300);--c-400:var(--primary-400);--c-500:var(--primary-500);--c-600:var(--primary-600);' class='fi-link relative inline-flex items-center justify-center font-semibold outline-none transition duration-75 hover:underline focus-visible:underline fi-size-sm fi-link-size-sm gap-1 text-sm fi-color-custom text-custom-600 dark:text-custom-400 fi-ac-link-action' href='{$googleMapsURL}' target='_blank'>Google Map</a>";
 
+        // Construct the HTML link for Google Maps
+        $link = "<a style='--c-300:var(--primary-300);--c-400:var(--primary-400);--c-500:var(--primary-500);--c-600:var(--primary-600);' class='fi-link relative inline-flex items-center justify-center font-semibold outline-none transition duration-75 hover:underline focus-visible:underline fi-size-sm fi-link-size-sm gap-1 text-sm fi-color-custom text-custom-600 dark:text-custom-400 fi-ac-link-action' href='{$googleMapsURL}' target='_blank'>Google Map</a>";
+
+        // Return an array containing waypoint names and the constructed link
         return [ 'text' => $waypointNames, 'link' => $link ];
+    }
+
+    /**
+     * Constructs a Google Maps URL based on provided waypoints.
+     *
+     * This function constructs a Google Maps URL with the provided waypoints.
+     *
+     * @param \Illuminate\Support\Collection $waypoints A collection of Waypoint objects.
+     * @return string The constructed Google Maps URL.
+     */
+    private function buildGoogleMapsURL($waypoints): string
+    {
+        // Extract the coordinates of origin, destination, and waypoints
+        $origin = $waypoints->first();
+        $destination = $waypoints->last();
+        $waypoints = $waypoints->slice(1, -1);
+
+        // Initialize the Google Maps URL with the API version parameter
+        $url = "https://www.google.com/maps/dir/?api=1";
+
+        // Add origin and destination coordinates to the URL
+        $url .= "&origin=" . $origin->latitude . "," . $origin->longitude;
+        $url .= "&destination=" . $destination->latitude . "," . $destination->longitude;
+
+        // Add waypoint coordinates to the URL
+        foreach ($waypoints as $waypoint) {
+            $url .= "&waypoints=" . $waypoint->latitude . "," . $waypoint->longitude;
+        }
+
+        // Return the constructed Google Maps URL
+        return $url;
     }
 }

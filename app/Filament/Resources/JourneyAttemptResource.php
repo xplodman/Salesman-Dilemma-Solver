@@ -50,7 +50,7 @@ class JourneyAttemptResource extends Resource {
                                  return '';
                              }
 
-                             $googleMapsInfo = ( new JourneyRouteCalculatorService() )->createGoogleMapsNavigationLink( $journeyAttempt->shortest_path );
+                             $googleMapsInfo = ( new JourneyRouteCalculatorService() )->generateGoogleMapsNavigationLink( $journeyAttempt->shortest_path );
 
                              return new HtmlString( 'Route link: ' . $googleMapsInfo['link'] );
                          } )
@@ -62,7 +62,7 @@ class JourneyAttemptResource extends Resource {
                                  return '';
                              }
 
-                             $googleMapsInfo = ( new JourneyRouteCalculatorService() )->createGoogleMapsNavigationLink( $journeyAttempt->shortest_path );
+                             $googleMapsInfo = ( new JourneyRouteCalculatorService() )->generateGoogleMapsNavigationLink( $journeyAttempt->shortest_path );
 
                              return $googleMapsInfo['text'];
                          } )
@@ -100,7 +100,7 @@ class JourneyAttemptResource extends Resource {
                                                  return '';
                                              }
 
-                                             $googleMapsInfo = ( new JourneyRouteCalculatorService() )->createGoogleMapsNavigationLink( $journeyAttempt->shortest_path );
+                                             $googleMapsInfo = ( new JourneyRouteCalculatorService() )->generateGoogleMapsNavigationLink( $journeyAttempt->shortest_path );
 
                                              return $googleMapsInfo['text'] . ' - ' . $googleMapsInfo['link'];
                                          } )
